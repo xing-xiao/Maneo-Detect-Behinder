@@ -1,0 +1,14 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: pcap-pvc
+  namespace: maneo
+  labels:
+    app: pcap
+spec:
+  storageClassName: pcap
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi

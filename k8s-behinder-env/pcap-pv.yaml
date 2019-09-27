@@ -1,0 +1,17 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: pcap-pv
+  labels:
+    type: nfs
+    app: pcap
+spec:
+  storageClassName: pcap
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Recycle
+  nfs:
+    path: /data/kubernetes-data/pcap
+    server: <your ip here>

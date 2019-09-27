@@ -1,2 +1,27 @@
 *.class
 *.log
+
+# DS_Store
+.DS_STORE
+*.DS_STORE
+
+# PyBuilder
+target/
+
+# mypy
+.mypy_cache/
+
+# git
+.git/
+
+# idea
+.idea/
+
+# workspace
+src/restful/.idea/workspace.xml
+
+# out
+*.out
+
+# pid
+*.pid

@@ -1,0 +1,200 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: filebeat
+  namespace: maneo
+data:
+  filebeat.yml: |
+    #=========================== Filebeat prospectors =============================
+
+    filebeat.inputs:
+
+    # Each - is a prospector. Most options can be set at the prospector level, so
+    # you can use different prospectors for various configurations.
+    # Below are the prospector specific configurations.
+    - type: log
+      enabled: true
+      paths:
+        - /logs/current/bro/conn.log
+      fields:
+          event_name: conn
+      fields_under_root: true
+      #json.message_key:
+      #json.keys_under_root: true
+    - type: log
+      enabled: true
+      paths:
+        - /logs/current/bro/http.log
+      fields:
+          event_name: http
+      fields_under_root: true
+      #json.message_key:
+      #json.keys_under_root: true
+    - type: log
+      enabled: true
+      paths:
+        - /logs/current/bro/dns.log
+      fields:
+          event_name: dns
+      fields_under_root: true
+      #json.message_key:
+      #json.keys_under_root: true
+    - type: log
+      enabled: true
+      paths:
+        - /logs/current/bro/ssl.log
+      fields:
+          event_name: ssl
+      fields_under_root: true
+      #json.message_key:
+      #json.keys_under_root: true
+    - type: log
+      enabled: true
+      paths:
+        - /logs/current/bro/snmp.log
+      fields:
+          event_name: snmp
+      fields_under_root: true
+      #json.message_key:
+      #json.keys_under_root: true
+    - type: log
+      enabled: true
+      paths:
+        - /logs/current/bro/smtp.log
+      fields:
+          event_name: smtp
+      fields_under_root: true
+      #json.message_key:
+      #json.keys_under_root: true
+    - type: log
+      enabled: true
+      paths:
+        - /logs/current/bro/ssh.log
+      fields:
+          event_name: ssh
+      fields_under_root: true
+      #json.message_key:
+      #json.keys_under_root: true
+    - type: log
+      enabled: true
+      paths:
+        - /logs/current/bro/ftp.log
+      fields:
+          event_name: ftp
+      fields_under_root: true
+      #json.message_key:
+      #json.keys_under_root: true
+    - type: log
+      enabled: true
+      paths:
+        - /logs/current/bro/files.log
+      fields:
+          event_name: files
+      fields_under_root: true
+      #json.message_key:
+      #json.keys_under_root: true
+    - type: log
+      enabled: true
+      paths:
+        - /logs/current/bro/stats.log
+      fields:
+          event_name: stats
+      fields_under_root: true
+      #json.message_key:
+      #json.keys_under_root: true
+    - type: log
+      enabled: true
+      paths:
+        - /logs/current/bro/notice.log
+      fields:
+          event_name: notice
+      fields_under_root: true
+      #json.message_key:
+      #json.keys_under_root: true
+    - type: log
+      enabled: true
+      paths:
+        - /logs/current/suricata/eve.json
+      fields:
+          event_name: suricata
+      fields_under_root: true
+      #json.message_key:
+      #json.keys_under_root: true
+
+    #============================= Filebeat modules ===============================
+
+    filebeat.config.modules:
+      # Glob pattern for configuration loading
+      #path: ${path.config}/modules.d/*.yml
+
+      # Set to true to enable config reloading
+      reload.enabled: true
+
+      # Period on which files under path should be checked for changes
+      #reload.period: 10s
+
+    #================================ General =====================================
+
+    # The name of the shipper that publishes the network data. It can be used to group
+    # all the transactions sent by a single shipper in the web interface.
+    #name: nta-168.7.8.134
+
+    # The tags of the shipper are included in their own field with each
+    # transaction published.
+    #tags: ["service-X", "web-tier"]
+
+    # Optional fields that you can specify to add additional information to the
+    # output.
+    #fields:
+    #  device_ip: ${DEVICE_IP}
+
+    #fields_under_root: true
+
+    #================================ Processors ===================================
+    #processors:
+    #- add_locale:
+    #    format: 8
+
+    processors:
+    #- include_fields:
+    #    fields: ["cpu"]
+    - drop_fields:
+        fields: ["beat", "source", "prospector", "input", "offset", "@version", "tags"]
+
+    #================================ Outputs =====================================
+    # Configure what output to use when sending the data collected by the beat.
+
+    #----------------------------- Logstash output --------------------------------
+    output.logstash:
+      # The Logstash hosts
+      hosts: ["maneo-logs-svc:5044"]
+      #worker: 1
+
+    #================================ Logging =====================================
+
+    # Sets log level. The default log level is info.
+    # Available log levels are: critical, error, warning, info, debug
+    logging.level: info
+
+    # At debug level, you can selectively enable logging only for some components.
+    # To enable all selectors use ["*"]. Examples of other selectors are "beat",
+    # "publish", "service".
+    logging.selectors: ["*"]
+
+    # Logging to rotating files. Set logging.to_files to false to disable logging to
+    # files.
+    logging.to_files: false
+    logging.files:
+      # Configure the path where the logs are written. The default is the logs directory
+      # under the home path (the binary location).
+      path: /var/log/filebeat
+      # The name of the files where the logs are written to.
+      name: filebeat
+      # Configure log file size limit. If limit is reached, log file will be
+      # automatically rotated
+      rotateeverybytes: 10485760 # = 10MB
+      # Number of rotated log files to keep. Oldest files will be deleted first.
+      keepfiles: 7
+      # The permissions mask to apply when rotating log files. The default value is 0600.
+      # Must be a valid Unix-style file permissions mask expressed in octal notation.
+      #permissions: 0600

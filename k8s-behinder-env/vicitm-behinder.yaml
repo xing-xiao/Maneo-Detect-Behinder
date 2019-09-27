@@ -1,0 +1,121 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: victim-behinder
+  namespace: maneo
+  labels:
+    case: victim-behinder
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 31001
+    protocol: TCP
+  selector:
+    case: victim-behinder
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: victim-behinder
+  namespace: maneo
+spec:
+  # ttlSecondsAfterFinished: 600
+  activeDeadlineSeconds: 600
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        case: victim-behinder
+    spec:
+      restartPolicy: Never #"OnFailure"
+      # maxRetries: "3"
+      containers:
+      - name: webshell
+        image: php:7.0-apache
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+          protocol: TCP
+          name: web
+        volumeMounts:
+        - name: shell
+          mountPath: "/var/www/html/shell.php"
+          subPath: "shell.php"
+      - name: tcpdump
+        image: registry.cn-hangzhou.aliyuncs.com/maneo/tcpdump
+        imagePullPolicy: Always
+        command:
+        - sh
+        - -c
+        - 'tcpdump -i eth0 -w /pcap/$(date "+%Y%m%d")-$(hostname).pcap'
+        volumeMounts:
+        - name: pcap-storage
+          mountPath: /pcap/
+      - name: suricata
+        image: registry.cn-hangzhou.aliyuncs.com/htsec/suricata
+        imagePullPolicy: Always
+        command:
+        - suricata
+        # -D
+        - -c
+        - /etc/suricata/suricata.yaml
+        - -i
+        - eth0
+        - --init-errors-fatal
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+            - NET_ADMIN
+            - SYS_RESOURCE
+        volumeMounts:
+        - name: suricata-yaml
+          mountPath: "/etc/suricata/suricata.yaml"
+          subPath: "suricata.yaml"
+        - name: share-suricata
+          mountPath: /var/log/suricata/
+      - name: zeek
+        image: registry.cn-hangzhou.aliyuncs.com/maneo/zeek:2.6.1
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: share-zeek
+          mountPath: /opt/bro/spool/bro/
+      - name: filebeat
+        image: docker.elastic.co/beats/filebeat:7.0.0
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: filebeat-yml
+          mountPath: "/usr/share/filebeat/filebeat.yml"
+          subPath: "filebeat.yml"
+        - name: share-suricata
+          mountPath: /logs/current/suricata/
+        - name: share-zeek
+          mountPath: /logs/current/bro/
+      volumes:
+      - name: filebeat-yml
+        configMap:
+          name: filebeat
+          items:
+          - key: filebeat.yml
+            path: filebeat.yml
+      - name: shell
+        configMap:
+          name: webshell-php-behinder
+          items:
+          - key: shell.php
+            path: shell.php
+      - name: suricata-yaml
+        configMap:
+          name: suricata
+          items:
+          - key: suricata.yaml
+            path: suricata.yaml
+      - name: share-suricata
+        emptyDir: {}
+      - name: share-zeek
+        emptyDir: {}
+      - name: pcap-storage
+        persistentVolumeClaim:
+          claimName: pcap-pvc
