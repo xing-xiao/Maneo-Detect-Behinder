@@ -26,7 +26,7 @@ pod中运行container分别为
 
 特征如下
 
-客户端会先和服务端进行两次密钥交换，生成16位长的密钥，然后通过密钥加密后续内容，使用base64编码填入post请求和response回包。所以的检测思路日下。
+客户端会先和服务端进行两次密钥交换，生成16位长的密钥，然后通过密钥加密后续内容，使用base64编码填入post请求和response回包。所以的检测思路如下。
 
 - Pattern1: `GET /uri?pwd=NUMBER`两遍，`CONTENT-TYPE: application/x-www-form-urlencoded`， 返回包长度位16。
 - Pattern2: `POST /uri`， `CONTENT-TYPE: application/x-www-form-urlencoded`，post包内容是base64编码字符串，返回包体是base64编码字符串。
